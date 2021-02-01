@@ -16,7 +16,7 @@ soil_predictor = c(
 all_predictor = c(clim_predictor, host_predictor, soil_predictor)
 
 pack_leaf = leaf %>% 
-  left_join(smd, by="SMD_pid") %>% 
+  left_join(select(smd, all_of(all_predictor), starts_with("SMD"), starts_with("dbMEM"), compartment), by="SMD_pid") %>% 
   na.omit()
 otu_leaf = select(pack_leaf, starts_with("OTU"))
 otu_leaf = otu_leaf[rowSums(otu_leaf) > 5,] > 0
@@ -30,6 +30,7 @@ hc = cbind(ss[,1], ss[,2]) %>%
   dist() %>%
   hclust(method="ward.D")
 cl = cutree(hc, 7)
+
 ggplot() +
   geom_point(aes(x=ss[,1],y=ss[,2],color=as.factor(cl))) +
   theme_bw()
@@ -41,16 +42,16 @@ plot(fit)
 dev.off()
 
 sformula = str_glue(
-  "ss[,1] ~ SMD_origin + ",
+  "ss[,1] ~ ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "),
   " + (1|SMD_site)")
-lmer.fit = lmer(as.formula(sformula),data=pack_leaf) %>% summary()
+lmer.fit = lmer(as.formula(sformula), data=pack_leaf) %>% summary()
 write.csv(lmer.fit$coefficients, "../result/ss1_otu.csv")
 
 sformula = str_glue(
-  "ss[,2] ~ SMD_origin + ",
+  "ss[,2] ~ ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "),
@@ -64,7 +65,7 @@ sformula = str_glue(
   paste0(all_predictor, collapse="+")
 )
 cca_leaf = cca(as.formula(sformula), data=pack_leaf)
-aov.cca = anova(cca_leaf,by="term", parallel=8)
+#aov.cca = anova(cca_leaf,by="term", parallel=8)
 site.cca = summary(cca_leaf)$sites
 var.cca = summary(cca_leaf)$biplot * 2.1
 
@@ -76,7 +77,7 @@ ggplot() +
   geom_text(aes(x=var.cca[,1],y=var.cca[,2], label=rownames(var.cca)), hjust=0.2, vjust=1.5) +
   theme_bw()
 ggsave("../result/cca_otu.jpg")
-write.csv(aov.cca, "../result/cca_otu.csv")
+#write.csv(aov.cca, "../result/cca_otu.csv")
 
 # NMDS
 nmds = metaMDS(otu_leaf)
@@ -86,15 +87,16 @@ ggplot() +
 ggsave("../result/nmds_otu.jpg")
 
 # RDA
-otu_leaf = decostand(otu_leaf, method="hellinger")
+#otu_leaf = decostand(otu_leaf, method="hellinger")
+otu_leaf = otu_leaf > 0
 sformula = str_glue(
   "otu_leaf ~ SMD_origin + ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "))
 rda_leaf = rda(as.formula(sformula), data=pack_leaf)
-aov.rda = anova(rda_leaf, by="term", parallel=8)
-write.csv(aov.rda, "../result/rda_otu.csv")
+#aov.rda = anova(rda_leaf, by="term", parallel=8)
+#write.csv(aov.rda, "../result/rda_otu.csv")
 
 vp = varpart(
   otu_leaf,
@@ -104,10 +106,18 @@ vp = varpart(
 write.csv(vp$part$indfract, "../result/vp_otu.csv")
 
 for (comp in c(1,2,3,4,5,6,7)) {
+  if (comp < 5) {
+    flg = "int"
+    eng = 8
+  } else {
+    flg = "nat"
+    eng = 6
+  }
   pack_leaf_f = filter(pack_leaf, compartment==comp)
   otu_leaf_f = pack_leaf_f %>% 
-    select(starts_with("OTU")) %>%
-    decostand(method="hellinger")
+    select(starts_with("OTU")) #%>%
+    #decostand(method="hellinger")
+  otu_leaf_f = otu_leaf_f > 0
   sformula = str_glue(
     "otu_leaf_f ~ ",
     paste0(all_predictor, collapse=" + "))

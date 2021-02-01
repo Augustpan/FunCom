@@ -17,8 +17,7 @@ guild = select(
 )
 
 pack_leaf = leaf %>% 
-  left_join(smd, by="SMD_pid") %>% 
-  na.omit()
+  left_join(smd, by="SMD_pid")
 
 otu_leaf_nat = filter(pack_leaf, SMD_origin=="nat") %>% select(starts_with("OTU"))
 otu_leaf_int = filter(pack_leaf, SMD_origin=="int") %>% select(starts_with("OTU"))
@@ -26,7 +25,7 @@ otu_leaf_int = filter(pack_leaf, SMD_origin=="int") %>% select(starts_with("OTU"
 patho_otu = filter(guild, trophic_mode=="Pathotroph")
 patho_otu_nat = otu_leaf_nat[,colSums(otu_leaf_nat)>0] %>% select(any_of(patho_otu$otu_name)) %>% colnames()
 patho_otu_int = otu_leaf_int[,colSums(otu_leaf_int)>0] %>% select(any_of(patho_otu$otu_name)) %>% colnames()
-venn.diagram(list(nat=symbio_otu_nat, int=symbio_otu_int), filename="../result/patho_venn.jpg")
+venn.diagram(list(nat=patho_otu_nat, int=patho_otu_int), filename="../result/patho_venn.jpg")
 
 symbio_otu = filter(guild, trophic_mode=="Symbiotroph")
 symbio_otu_nat = otu_leaf_nat[,colSums(otu_leaf_nat)>0] %>% select(any_of(symbio_otu$otu_name)) %>% colnames()

@@ -16,7 +16,7 @@ soil_predictor = c(
 all_predictor = c(clim_predictor, host_predictor, soil_predictor)
 
 pack_t_leaf = t_leaf %>% 
-  left_join(smd, by="SMD_pid") %>% 
+  left_join(select(smd, all_of(all_predictor), starts_with("SMD"), starts_with("dbMEM"), compartment), by="SMD_pid") %>% 
   na.omit()
 tro_leaf = select(pack_t_leaf, starts_with("TM"))
 
@@ -82,7 +82,7 @@ ggplot() +
 ggsave("../result/nmds_tro.jpg")
 
 ## RDA
-tro_leaf = decostand(tro_leaf, method="hellinger")
+#tro_leaf = decostand(tro_leaf, method="hellinger")
 sformula = str_glue(
   "tro_leaf ~ SMD_origin + ",
   paste0(all_predictor, collapse=" + "),
@@ -102,8 +102,8 @@ write.csv(vp$part$indfract, "../result/vp_tro.csv")
 for (comp in c(1,2,3,4,5,6,7)) {
   pack_t_leaf_f = filter(pack_t_leaf, compartment==comp)
   tro_leaf_f = pack_t_leaf_f %>% 
-    select(starts_with("TM")) %>%
-    decostand(method="hellinger")
+    select(starts_with("TM")) #%>%
+    #decostand(method="hellinger")
   sformula = str_glue(
     "tro_leaf_f ~ ",
     paste0(all_predictor, collapse=" + "))
