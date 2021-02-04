@@ -37,7 +37,7 @@ plot(fit)
 dev.off()
 
 sformula = str_glue(
-  "ss[,1] ~ SMD_origin + ",
+  "ss[,1] ~ ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "),
@@ -46,7 +46,7 @@ lmer.fit = lmer(as.formula(sformula),data=pack_t_leaf) %>% summary()
 write.csv(lmer.fit$coefficients, "../result/ss1_tro.csv")
 
 sformula = str_glue(
-  "ss[,2] ~ SMD_origin + ",
+  "ss[,2] ~ ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "),
@@ -84,7 +84,7 @@ ggsave("../result/nmds_tro.jpg")
 ## RDA
 #tro_leaf = decostand(tro_leaf, method="hellinger")
 sformula = str_glue(
-  "tro_leaf ~ SMD_origin + ",
+  "tro_leaf ~ ",
   paste0(all_predictor, collapse=" + "),
   " + ",
   paste0(all_predictor, ":SMD_origin", collapse = " + "))
